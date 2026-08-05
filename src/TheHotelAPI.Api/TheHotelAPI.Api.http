@@ -1,0 +1,29 @@
+@host = http://localhost:5193
+@apiKey = development-only-key
+
+### Create a hotel
+POST {{host}}/api/v1/hotels
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "name": "Split Central Hotel",
+  "pricePerNight": { "amount": 95, "currency": "EUR" },
+  "location": { "latitude": 43.5081, "longitude": 16.4402 }
+}
+
+### List hotels
+GET {{host}}/api/v1/hotels?page=1&pageSize=20
+
+### Search
+POST {{host}}/api/v1/hotel-searches
+Content-Type: application/json
+
+{
+  "prompt": "Tražim hotel u Splitu do 150 EUR",
+  "page": 1,
+  "pageSize": 20
+}
+
+### Health
+GET {{host}}/health/live
