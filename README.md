@@ -29,14 +29,14 @@ dotnet test TheHotelAPI.sln
 | DELETE | `/api/v1/hotels/{id}` | Delete hotel | Yes |
 | POST | `/api/v1/hotel-searches` | Search hotels | No |
 
-Search prompt examples: `hotel in Split under 150 EUR` and `Tražim hotel u Dubrovniku do 120 €`. Supported cities are Dubrovnik, Split, Zagreb, Zadar, Rijeka, Pula, and Osijek.
+Send a city name in the `city` field together with a prompt, for example `{ "prompt": "hotel under 150 EUR", "city": "Split" }`. The API automatically resolves the city to coordinates. A city can also be included directly in a prompt such as `hotel in Split under 150 EUR`. Frequently used Croatian cities are resolved offline; other cities use OpenStreetMap Nominatim. Explicit `currentLocation` coordinates remain supported and take priority when supplied.
 
 ## Ranking
 
-Hotels in another currency or above budget are filtered out. Distance uses the Haversine formula. Remaining hotels receive this score (lower is better):
+All CRUD-managed hotels are returned. The PoC uses EUR consistently so prices remain comparable. Distance uses the Haversine formula. Explicit `currentLocation` GPS coordinates take priority; otherwise a city extracted from the prompt is treated as the user's current location. Hotels receive this score (lower is better):
 
 ```text
-priceScore = price / budget
+priceScore = price / budget (values above 1 indicate an over-budget hotel)
 distanceScore = min(distanceKm / 100km, 1)
 score = 0.5 * priceScore + 0.5 * distanceScore
 ```

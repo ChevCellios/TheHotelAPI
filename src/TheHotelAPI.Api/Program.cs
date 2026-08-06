@@ -9,7 +9,13 @@ builder.Services.AddHealthChecks();
 builder.Services.AddScoped<HotelService>();
 builder.Services.AddScoped<HotelSearchService>();
 builder.Services.AddSingleton<IHotelRepository, InMemoryHotelRepository>();
-builder.Services.AddSingleton<ISearchPromptParser, DeterministicSearchPromptParser>();
+builder.Services.AddScoped<ISearchPromptParser, DeterministicSearchPromptParser>();
+builder.Services.AddHttpClient<IGeocodingService, NominatimGeocodingService>(client =>
+{
+    client.BaseAddress = new Uri("https://nominatim.openstreetmap.org/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("TheHotelAPI/1.0");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

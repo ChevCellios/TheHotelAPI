@@ -20,7 +20,8 @@ POST {{host}}/api/v1/hotel-searches
 Content-Type: application/json
 
 {
-  "prompt": "Tražim hotel u Splitu do 150 EUR",
+  "prompt": "Tražim hotel do 150 EUR",
+  "city": "Split",
   "page": 1,
   "pageSize": 20
 }

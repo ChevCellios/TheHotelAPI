@@ -16,4 +16,8 @@ public sealed class HotelTests
     [Fact]
     public void Money_RejectsNonPositiveAmount()
         => Assert.Throws<ArgumentOutOfRangeException>(() => new Money(0, "EUR"));
+
+    [Fact]
+    public void Money_RejectsUnsupportedCurrency()
+        => Assert.Throws<ArgumentException>(() => new Money(100, "USD"));
 }

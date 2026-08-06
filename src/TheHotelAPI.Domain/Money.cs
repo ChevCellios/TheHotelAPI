@@ -15,7 +15,11 @@ public sealed record Money
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3)
             throw new ArgumentException("Currency must be a three-letter ISO code.", nameof(currency));
 
+        var normalizedCurrency = currency.Trim().ToUpperInvariant();
+        if (normalizedCurrency != "EUR")
+            throw new ArgumentException("Only EUR is supported by this proof of concept.", nameof(currency));
+
         Amount = decimal.Round(amount, 2, MidpointRounding.AwayFromZero);
-        Currency = currency.Trim().ToUpperInvariant();
+        Currency = normalizedCurrency;
     }
 }

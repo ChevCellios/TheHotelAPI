@@ -23,11 +23,14 @@ public sealed class HotelApiTests : IClassFixture<WebApplicationFactory<Program>
         var createResponse = await _client.SendAsync(create);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var searchResponse = await _client.PostAsJsonAsync("/api/v1/hotel-searches", new SearchHotelsRequest("Hotel in Split under 100 EUR"));
+        var searchResponse = await _client.PostAsJsonAsync("/api/v1/hotel-searches",
+            new SearchHotelsRequest("Hotel under 100 EUR", City: "Split"));
         searchResponse.EnsureSuccessStatusCode();
         var result = await searchResponse.Content.ReadFromJsonAsync<HotelSearchResponse>();
         Assert.NotNull(result);
-        Assert.Contains(result.Items, hotel => hotel.Name == "Split Central");
+        var hotel = Assert.Single(result.Items, hotel => hotel.Name == "Split Central");
+        Assert.Equal(0, hotel.DistanceKm);
+        Assert.Equal(43.5081, result.Criteria.CurrentLocation.Latitude);
     }
 
     [Fact]

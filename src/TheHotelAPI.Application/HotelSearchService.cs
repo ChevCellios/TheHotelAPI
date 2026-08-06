@@ -1,3 +1,5 @@
+using TheHotelAPI.Domain;
+
 namespace TheHotelAPI.Application;
 
 /// <summary>Filters, scores, orders, and paginates hotels for structured search criteria.</summary>
@@ -10,18 +12,21 @@ public sealed class HotelSearchService(IHotelRepository repository, ISearchPromp
     {
         ArgumentNullException.ThrowIfNull(request);
         HotelService.ValidatePaging(request.Page, request.PageSize);
-        var criteria = parser.Parse(request.Prompt);
+        // Explicit GPS coordinates are more accurate; a city extracted from the prompt is the fallback.
+        var explicitLocation = request.CurrentLocation is null
+            ? null
+            : new GeoLocation(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
+        var criteria = await parser.ParseAsync(request.Prompt, request.City, explicitLocation, cancellationToken);
         var hotels = await repository.GetAllAsync(cancellationToken);
 
         var ranked = hotels
-            // Budget and currency are hard constraints; ranking is applied only to eligible hotels.
-            .Where(h => string.Equals(h.PricePerNight.Currency, criteria.Currency, StringComparison.OrdinalIgnoreCase))
-            .Where(h => h.PricePerNight.Amount <= criteria.MaximumBudget)
+            // The assignment asks for all CRUD-managed hotels. Budget affects score but is not a filter.
             .Select(h =>
             {
-                var distance = h.Location.DistanceTo(criteria.Location);
+                var distance = h.Location.DistanceTo(criteria.CurrentLocation);
                 // Both components are normalized before equal weighting so units do not dominate the score.
-                var priceScore = (double)(h.PricePerNight.Amount / criteria.MaximumBudget);
+                // A hotel above budget receives a score greater than 1 and remains in the result list.
+                var priceScore = (double)(h.PricePerNight.Amount / criteria.Budget);
                 var distanceScore = Math.Min(distance / DistanceReferenceKm, 1);
                 return new HotelSearchItem(h.Id, h.Name,
                     new(h.PricePerNight.Amount, h.PricePerNight.Currency),
@@ -33,6 +38,6 @@ public sealed class HotelSearchService(IHotelRepository repository, ISearchPromp
 
         var items = ranked.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToArray();
         return new(items, request.Page, request.PageSize, ranked.Length,
-            new(new(criteria.Location.Latitude, criteria.Location.Longitude), criteria.MaximumBudget, criteria.Currency));
+            new(new(criteria.CurrentLocation.Latitude, criteria.CurrentLocation.Longitude), criteria.Budget, criteria.Currency));
     }
 }

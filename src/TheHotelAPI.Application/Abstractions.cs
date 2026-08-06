@@ -18,7 +18,13 @@ public interface IHotelRepository
 /// <summary>Converts a free-text user prompt into validated, structured search criteria.</summary>
 public interface ISearchPromptParser
 {
-    SearchCriteria Parse(string prompt);
+    Task<SearchCriteria> ParseAsync(string prompt, string? city = null, GeoLocation? explicitCurrentLocation = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Resolves a city name to geographic coordinates.</summary>
+public interface IGeocodingService
+{
+    Task<GeoLocation?> FindAsync(string city, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Indicates that required search criteria could not be extracted from a prompt.</summary>
