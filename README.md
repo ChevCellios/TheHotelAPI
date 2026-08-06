@@ -1,5 +1,7 @@
 # The Hotel API
 
+[![CI](https://github.com/ChevCellios/TheHotelAPI/actions/workflows/ci.yml/badge.svg)](https://github.com/ChevCellios/TheHotelAPI/actions/workflows/ci.yml)
+
 Working proof-of-concept for hotel CRUD and prompt-based hotel search, built with ASP.NET Core 9 and a pragmatic Clean Architecture structure.
 
 ## Run in Visual Studio
