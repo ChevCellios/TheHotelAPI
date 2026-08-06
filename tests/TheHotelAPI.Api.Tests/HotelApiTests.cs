@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TheHotelAPI.Application;
 
@@ -9,9 +10,18 @@ namespace TheHotelAPI.Api.Tests;
 
 public sealed class HotelApiTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private const string TestApiKey = "integration-test-only-key";
     private readonly HttpClient _client;
     public HotelApiTests(WebApplicationFactory<Program> factory) => _client = factory
-        .WithWebHostBuilder(builder => builder.ConfigureLogging(logging => logging.ClearProviders()))
+        .WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration(configuration =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ApiKey"] = TestApiKey
+                }));
+            builder.ConfigureLogging(logging => logging.ClearProviders());
+        })
         .CreateClient();
 
     [Fact]
@@ -19,7 +29,7 @@ public sealed class HotelApiTests : IClassFixture<WebApplicationFactory<Program>
     {
         var request = new UpsertHotelRequest("Split Central", new(90, "EUR"), new(43.5081, 16.4402));
         using var create = new HttpRequestMessage(HttpMethod.Post, "/api/v1/hotels") { Content = JsonContent.Create(request) };
-        create.Headers.Add("X-Api-Key", "development-only-key");
+        create.Headers.Add("X-Api-Key", TestApiKey);
         var createResponse = await _client.SendAsync(create);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 

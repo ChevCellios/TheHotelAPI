@@ -1,5 +1,5 @@
-@host = http://localhost:5193
-@apiKey = development-only-key
+@host = https://localhost:7189
+@apiKey = REPLACE_WITH_YOUR_LOCAL_USER_SECRET
 
 ### Create a hotel
 POST {{host}}/api/v1/hotels

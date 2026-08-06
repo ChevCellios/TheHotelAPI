@@ -6,10 +6,10 @@ Working proof-of-concept for hotel CRUD and prompt-based hotel search, built wit
 
 1. Open `TheHotelAPI.sln` in Visual Studio 2022 with the ASP.NET workload and .NET 9 SDK.
 2. Set `TheHotelAPI.Api` as the startup project.
-3. Select the `http` launch profile and press F5.
+3. Select the `https` launch profile and press F5.
 4. Open `/swagger` or run requests from `src/TheHotelAPI.Api/TheHotelAPI.Api.http`.
 
-The development API key is `development-only-key` and is sent in the `X-Api-Key` header for create, update, and delete operations. Replace it with user secrets or an environment variable outside this PoC.
+Set a strong local development API key once with `dotnet user-secrets set "ApiKey" "<your-strong-local-key>" --project src/TheHotelAPI.Api`. Copy the same local value into the `@apiKey` variable of the `.http` file when testing, but do not commit that replacement. The key is sent in the `X-Api-Key` header for create, update, and delete operations and is not stored in tracked configuration. Use a secret manager or environment variable in deployed environments.
 
 CLI alternative:
 

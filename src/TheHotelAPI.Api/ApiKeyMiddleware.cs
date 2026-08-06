@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TheHotelAPI.Api;
@@ -15,7 +17,7 @@ public sealed class ApiKeyMiddleware(RequestDelegate next, IConfiguration config
         {
             var expected = configuration["ApiKey"];
             var supplied = context.Request.Headers["X-Api-Key"].FirstOrDefault();
-            if (string.IsNullOrEmpty(expected) || !string.Equals(expected, supplied, StringComparison.Ordinal))
+            if (!KeysMatch(expected, supplied))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsJsonAsync(new ProblemDetails { Status = 401, Title = "A valid X-Api-Key header is required." });
@@ -23,5 +25,14 @@ public sealed class ApiKeyMiddleware(RequestDelegate next, IConfiguration config
             }
         }
         await next(context);
+    }
+
+    private static bool KeysMatch(string? expected, string? supplied)
+    {
+        if (string.IsNullOrEmpty(expected) || string.IsNullOrEmpty(supplied)) return false;
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+        var suppliedBytes = Encoding.UTF8.GetBytes(supplied);
+        return expectedBytes.Length == suppliedBytes.Length &&
+               CryptographicOperations.FixedTimeEquals(expectedBytes, suppliedBytes);
     }
 }
