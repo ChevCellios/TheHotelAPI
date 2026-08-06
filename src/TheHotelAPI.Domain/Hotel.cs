@@ -8,9 +8,10 @@ public sealed record Hotel
     public Guid Id { get; init; }
     public string Name { get; init; }
     public Money PricePerNight { get; init; }
+    public string City { get; init; }
     public GeoLocation Location { get; init; }
 
-    public Hotel(Guid id, string name, Money pricePerNight, GeoLocation location)
+    public Hotel(Guid id, string name, Money pricePerNight, string city, GeoLocation location)
     {
         if (id == Guid.Empty) throw new ArgumentException("Hotel id is required.", nameof(id));
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Hotel name is required.", nameof(name));
@@ -18,6 +19,8 @@ public sealed record Hotel
         Id = id;
         Name = name.Trim();
         PricePerNight = pricePerNight ?? throw new ArgumentNullException(nameof(pricePerNight));
+        if (string.IsNullOrWhiteSpace(city)) throw new ArgumentException("Hotel city is required.", nameof(city));
+        City = city.Trim();
         Location = location ?? throw new ArgumentNullException(nameof(location));
     }
 }

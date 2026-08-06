@@ -11,23 +11,30 @@ namespace TheHotelAPI.Infrastructure;
 /// </summary>
 public sealed partial class DeterministicSearchPromptParser(IGeocodingService geocoder) : ISearchPromptParser
 {
-    public async Task<SearchCriteria> ParseAsync(string prompt, string? city = null, GeoLocation? explicitCurrentLocation = null, CancellationToken cancellationToken = default)
+    public async Task<SearchCriteria> ParseAsync(string prompt, string? originCity = null, string? destinationCity = null, GeoLocation? explicitCurrentLocation = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(prompt)) throw new SearchPromptException("Prompt is required.");
         if (prompt.Length > 500) throw new SearchPromptException("Prompt cannot exceed 500 characters.");
-        var currentLocation = explicitCurrentLocation;
-        if (currentLocation is null)
-        {
-            city = string.IsNullOrWhiteSpace(city) ? ExtractCity(prompt) : city.Trim();
-            if (string.IsNullOrWhiteSpace(city))
-                throw new SearchPromptException("City could not be extracted. Provide the city field or use a prompt such as 'hotel in Split under 150 EUR'.");
-            currentLocation = await geocoder.FindAsync(city, cancellationToken)
-                ?? throw new SearchPromptException($"City '{city}' could not be found.");
-        }
+        destinationCity = string.IsNullOrWhiteSpace(destinationCity) ? ExtractCity(prompt) : destinationCity.Trim();
+        if (string.IsNullOrWhiteSpace(destinationCity))
+            throw new SearchPromptException("Destination city could not be extracted. Use a prompt such as 'hotel in Split under 150 EUR'.");
+        if (destinationCity.Length > 100)
+            throw new SearchPromptException("City cannot exceed 100 characters.");
+
+        // originCity is the traveller's starting point; the city in the prompt is the destination.
+        originCity = string.IsNullOrWhiteSpace(originCity) ? destinationCity : originCity.Trim();
+        if (originCity.Length > 100)
+            throw new SearchPromptException("City cannot exceed 100 characters.");
+        var currentLocation = explicitCurrentLocation ?? await geocoder.FindAsync(originCity, cancellationToken)
+            ?? throw new SearchPromptException($"City '{originCity}' could not be found.");
+
+        // Validate the destination independently, even when a different origin was supplied.
+        _ = await geocoder.FindAsync(destinationCity, cancellationToken)
+            ?? throw new SearchPromptException($"City '{destinationCity}' could not be found.");
         var match = BudgetRegex().Match(prompt);
         if (!match.Success || !decimal.TryParse(match.Groups[1].Value.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var budget) || budget <= 0)
             throw new SearchPromptException("Budget could not be extracted. Example: 'hotel in Split under 150 EUR'.");
-        return new(currentLocation, decimal.Round(budget, 2), "EUR");
+        return new(destinationCity, currentLocation, decimal.Round(budget, 2), "EUR");
     }
 
     private static string? ExtractCity(string prompt)
@@ -40,6 +47,6 @@ public sealed partial class DeterministicSearchPromptParser(IGeocodingService ge
     [GeneratedRegex(@"(?<!\d)(\d+(?:[\.,]\d{1,2})?)\s*(?:EUR|\u20AC|eura?)", RegexOptions.IgnoreCase)]
     private static partial Regex BudgetRegex();
 
-    [GeneratedRegex(@"(?:\bin\s+|\bu\s+|\bnear\s+|\bblizu\s+)([\p{L}][\p{L}\s.'-]*?)(?=\s+(?:under|ispod|do|for|za)\s+\d|[,.;]|$)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?:\bin\s+|\bu\s+(?:gradu\s+)?|\bnear\s+|\bblizu\s+)([\p{L}][\p{L}\s.'-]*?)(?=\s+(?:under|ispod|do|for|za)\s+\d|[,.;]|$)", RegexOptions.IgnoreCase)]
     private static partial Regex CityRegex();
 }

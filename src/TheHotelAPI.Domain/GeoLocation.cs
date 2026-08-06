@@ -8,8 +8,10 @@ public sealed record GeoLocation
 
     public GeoLocation(double latitude, double longitude)
     {
-        if (latitude is < -90 or > 90) throw new ArgumentOutOfRangeException(nameof(latitude));
-        if (longitude is < -180 or > 180) throw new ArgumentOutOfRangeException(nameof(longitude));
+        if (!double.IsFinite(latitude) || latitude is < -90 or > 90)
+            throw new ArgumentOutOfRangeException(nameof(latitude), "Latitude must be a finite value between -90 and 90.");
+        if (!double.IsFinite(longitude) || longitude is < -180 or > 180)
+            throw new ArgumentOutOfRangeException(nameof(longitude), "Longitude must be a finite value between -180 and 180.");
         Latitude = latitude;
         Longitude = longitude;
     }

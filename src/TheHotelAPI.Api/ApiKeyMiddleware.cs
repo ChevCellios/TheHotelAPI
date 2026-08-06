@@ -20,7 +20,11 @@ public sealed class ApiKeyMiddleware(RequestDelegate next, IConfiguration config
             if (!KeysMatch(expected, supplied))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsJsonAsync(new ProblemDetails { Status = 401, Title = "A valid X-Api-Key header is required." });
+                await context.Response.WriteAsJsonAsync(
+                    new ProblemDetails { Status = 401, Title = "A valid X-Api-Key header is required." },
+                    options: null,
+                    contentType: "application/problem+json",
+                    cancellationToken: context.RequestAborted);
                 return;
             }
         }

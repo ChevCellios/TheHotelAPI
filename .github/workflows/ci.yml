@@ -1,15 +1,40 @@
 name: CI
+
 on:
   push:
   pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 9
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - run: dotnet restore TheHotelAPI.sln
-      - run: dotnet build TheHotelAPI.sln --configuration Release --no-restore
-      - run: dotnet test TheHotelAPI.sln --configuration Release --no-build
+
+      - name: Restore
+        run: dotnet restore TheHotelAPI.sln
+
+      - name: Build
+        run: dotnet build TheHotelAPI.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test TheHotelAPI.sln --configuration Release --no-build --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/TestResults/**/coverage.cobertura.xml

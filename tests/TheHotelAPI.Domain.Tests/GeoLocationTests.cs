@@ -17,6 +17,10 @@ public sealed class GeoLocationTests
     [InlineData(91, 0)]
     [InlineData(0, -181)]
     [InlineData(0, 181)]
+    [InlineData(double.NaN, 0)]
+    [InlineData(0, double.NaN)]
+    [InlineData(double.PositiveInfinity, 0)]
+    [InlineData(0, double.NegativeInfinity)]
     public void Constructor_RejectsInvalidCoordinates(double latitude, double longitude)
         => Assert.Throws<ArgumentOutOfRangeException>(() => new GeoLocation(latitude, longitude));
 }

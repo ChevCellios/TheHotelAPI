@@ -18,7 +18,7 @@ public interface IHotelRepository
 /// <summary>Converts a free-text user prompt into validated, structured search criteria.</summary>
 public interface ISearchPromptParser
 {
-    Task<SearchCriteria> ParseAsync(string prompt, string? city = null, GeoLocation? explicitCurrentLocation = null, CancellationToken cancellationToken = default);
+    Task<SearchCriteria> ParseAsync(string prompt, string? originCity = null, string? destinationCity = null, GeoLocation? explicitCurrentLocation = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Resolves a city name to geographic coordinates.</summary>
@@ -29,3 +29,6 @@ public interface IGeocodingService
 
 /// <summary>Indicates that required search criteria could not be extracted from a prompt.</summary>
 public sealed class SearchPromptException(string message) : Exception(message);
+
+/// <summary>Indicates that a supplied city cannot be converted into a hotel location.</summary>
+public sealed class LocationResolutionException(string message) : Exception(message);

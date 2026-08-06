@@ -9,7 +9,7 @@ X-Api-Key: {{apiKey}}
 {
   "name": "Split Central Hotel",
   "pricePerNight": { "amount": 95, "currency": "EUR" },
-  "location": { "latitude": 43.5081, "longitude": 16.4402 }
+  "city": "Split"
 }
 
 ### List hotels
@@ -21,7 +21,8 @@ Content-Type: application/json
 
 {
   "prompt": "Tražim hotel do 150 EUR",
-  "city": "Split",
+  "originCity": "Zagreb",
+  "destinationCity": "Split",
   "page": 1,
   "pageSize": 20
 }

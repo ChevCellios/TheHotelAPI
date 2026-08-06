@@ -35,6 +35,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "The Hotel API", Version = "v1" });
+    options.SchemaFilter<RequestSchemaExamplesFilter>();
     options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.ApiKey,
@@ -42,17 +43,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Development API key for create, update, and delete operations."
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecurityScheme
-        {
-            Reference = new OpenApiReference
-            {
-                Type = ReferenceType.SecurityScheme,
-                Id = "ApiKey"
-            }
-        }] = Array.Empty<string>()
-    });
+    options.OperationFilter<ApiKeySecurityOperationFilter>();
 });
 
 var app = builder.Build();

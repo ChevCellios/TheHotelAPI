@@ -12,6 +12,7 @@ public sealed class HotelsController(HotelService service) : ControllerBase
     [ProducesResponseType<HotelResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<HotelResponse>> Create(UpsertHotelRequest request, CancellationToken ct)
     { var hotel = await service.CreateAsync(request, ct); return CreatedAtAction(nameof(Get), new { id = hotel.Id }, hotel); }
 
@@ -32,6 +33,7 @@ public sealed class HotelsController(HotelService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<HotelResponse>> Update(Guid id, UpsertHotelRequest request, CancellationToken ct)
     { var hotel = await service.UpdateAsync(id, request, ct); return hotel is null ? NotFound() : Ok(hotel); }
 

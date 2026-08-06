@@ -12,14 +12,12 @@ public sealed class HotelSearchService(IHotelRepository repository, ISearchPromp
     {
         ArgumentNullException.ThrowIfNull(request);
         HotelService.ValidatePaging(request.Page, request.PageSize);
-        // Explicit GPS coordinates are more accurate; a city extracted from the prompt is the fallback.
-        var explicitLocation = request.CurrentLocation is null
-            ? null
-            : new GeoLocation(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
-        var criteria = await parser.ParseAsync(request.Prompt, request.City, explicitLocation, cancellationToken);
+        // The origin is used for distance; the explicit destination (or prompt fallback) filters hotel results.
+        var criteria = await parser.ParseAsync(request.Prompt, request.OriginCity, request.DestinationCity, cancellationToken: cancellationToken);
         var hotels = await repository.GetAllAsync(cancellationToken);
 
         var ranked = hotels
+            .Where(h => string.Equals(h.City, criteria.City, StringComparison.OrdinalIgnoreCase))
             // The assignment asks for all CRUD-managed hotels. Budget affects score but is not a filter.
             .Select(h =>
             {
@@ -30,6 +28,7 @@ public sealed class HotelSearchService(IHotelRepository repository, ISearchPromp
                 var distanceScore = Math.Min(distance / DistanceReferenceKm, 1);
                 return new HotelSearchItem(h.Id, h.Name,
                     new(h.PricePerNight.Amount, h.PricePerNight.Currency),
+                    h.City,
                     Math.Round(distance, 2), Math.Round((priceScore + distanceScore) / 2, 4));
             })
             // Explicit tie-breakers guarantee deterministic output and stable pagination.
@@ -38,6 +37,6 @@ public sealed class HotelSearchService(IHotelRepository repository, ISearchPromp
 
         var items = ranked.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToArray();
         return new(items, request.Page, request.PageSize, ranked.Length,
-            new(new(criteria.CurrentLocation.Latitude, criteria.CurrentLocation.Longitude), criteria.Budget, criteria.Currency));
+            new(criteria.City, new(criteria.CurrentLocation.Latitude, criteria.CurrentLocation.Longitude), criteria.Budget, criteria.Currency));
     }
 }
